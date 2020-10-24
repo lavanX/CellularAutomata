@@ -30,7 +30,7 @@
             <TextBox Text="{Binding ElementName=MatrixSizeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="80" VerticalAlignment="Center" IsEnabled="{Binding Path=MatrixCreated,Converter={StaticResource InverseBooleanConverter}}" Margin="5 0"/>
             <Slider x:Name="MatrixSizeSlider" Width="180" Maximum="500" Minimum="50"  TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center" IsEnabled="{Binding Path=MatrixCreated,Converter={StaticResource InverseBooleanConverter}}" Margin="5 0"/>
             <Button x:Name="CreateMatrixButton" Content="Создать матрицу" Click="CreateMatrixButton_OnClick" VerticalAlignment="Center" IsEnabled="{Binding Path=MatrixCreated,Converter={StaticResource InverseBooleanConverter}}" Margin="5 0"/>
-            <Button x:Name="ClearButton" Content="Очистить" Click="ClearButton_OnClick" VerticalAlignment="Center" Margin="5 0"/>
+            <Button x:Name="ClearButton" Content="Очистить" Click="ClearButton_OnClick" VerticalAlignment="Center" Margin="5 0" IsEnabled="{Binding MatrixCreated}"/>
         </StackPanel>
         <Grid Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
 
@@ -43,7 +43,7 @@
                 <Label Content="Задержка в мс:" Margin="0px 5px" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Label Content="{Binding AutoUpdateDelay}" Margin="0px 5px"   HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </StackPanel>
-            <Slider x:Name="DelaySlider" Width="180" Value="{Binding AutoUpdateDelay, UpdateSourceTrigger=PropertyChanged}" Maximum="1000" Minimum="1" TickFrequency="1" IsSnapToTickEnabled="True" IsEnabled="{Binding IsAutoUpdateEnabled, Converter={StaticResource InverseBooleanConverter}}" HorizontalAlignment ="Center"  Margin="5"/>
+            <Slider x:Name="DelaySlider" Width="180" Value="{Binding AutoUpdateDelay, UpdateSourceTrigger=PropertyChanged}" Maximum="1000" Minimum="1" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment ="Center"  Margin="5"/>
             <Button x:Name="AutoUpdateButton" Content="Автоматичеки" Click="AutoUpdateButton_OnClick" IsEnabled="{Binding MatrixCreated}" Margin="5" HorizontalAlignment="Center" Padding="5px 0"/>
         </StackPanel>
     </Grid>

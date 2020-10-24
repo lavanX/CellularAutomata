@@ -11,8 +11,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using CellularAutomaton.Core;
-using CellularAutomaton.Core.Annotations;
-using Color = System.Drawing.Color;
 using Timer = System.Timers.Timer;
 
 namespace CellularAutomata
@@ -22,6 +20,8 @@ namespace CellularAutomata
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        private readonly Color _white = Color.FromArgb(255, 255, 255, 255);
+        private readonly Color _black = Color.FromArgb(255, 0, 0, 0);
         private bool _matrixCreated;
         private WriteableBitmap _imageSource;
         private int _scale;
@@ -33,20 +33,10 @@ namespace CellularAutomata
             InitializeComponent();
             RenderOptions.SetBitmapScalingMode(CrystalViewImage, BitmapScalingMode.NearestNeighbor);
             RenderOptions.SetEdgeMode(CrystalViewImage, EdgeMode.Aliased);
-            //_timer = new Timer(state => MakeStep());
-           // _timer.
            _timer = new Timer();
         }
 
-        private int Size
-        {
-            get
-            {
-                int result = 0;
-                Application.Current.Dispatcher.Invoke(() => result = (int) MatrixSizeSlider.Value);
-                return result;
-            }
-        }
+        private int Size => (int) MatrixSizeSlider.Value;
 
         public int Scale
         {
@@ -88,6 +78,7 @@ namespace CellularAutomata
             {
 
                 _autoUpdateDelay = value;
+                _timer.Interval = value;
                 OnPropertyChanged();
             }
         }
@@ -101,26 +92,20 @@ namespace CellularAutomata
             Scale = Size;
             MatrixCreated = true;
             DrawMatrix();
-            Task.Run(action: AutoUpdate);
         }
 
         private void DrawMatrix()
         {
-            for (int i = 0; i < Size; i++)
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                for (int j = 0; j < Size; j++)
-                {
-                    var state = Crystal.GetState(i, j);
-                    Color color = state switch
-                    {
-                        PixelState.On => Color.White,
-                        PixelState.Off => Color.Black,
+                _imageSource?.ForEach(
+                    (column, row, color) => Crystal.GetState(column, row) switch {
+                        PixelState.On => _white,
+                        PixelState.Off => _black,
                         _ => throw new ArgumentOutOfRangeException()
-                    };
-                    //Application.Current.Dispatcher.Invoke(() => { _imageSource.SetPixelValue(i, j, color); });
-                    _imageSource.SetPixelValue(i, j, color);
-                }
-            }
+                    }
+                );
+            });
         }
 
         private void MakeStep()
@@ -130,6 +115,10 @@ namespace CellularAutomata
         }
         private void ClearButton_OnClick(object sender, RoutedEventArgs e)
         {
+            if (IsAutoUpdateEnabled)
+            {
+                ToggleAutoUpdate();
+            }
             MatrixCreated = false;
             Crystal = null;
             _imageSource = null;
@@ -139,10 +128,10 @@ namespace CellularAutomata
 
         private void OnCrystalClicked(object sender, MouseButtonEventArgs e)
         {
-            var x = (int)( e.GetPosition(CrystalViewImage).X / Scale* Size);
-            var y = (int)( e.GetPosition(CrystalViewImage).Y / Scale* Size);
-            Crystal.SetState(x,y, PixelState.On);
-            _imageSource.SetPixelValue(x, y, Color.White);
+            var column = (int)( e.GetPosition(CrystalViewImage).X / Scale* Size);
+            var row = (int)( e.GetPosition(CrystalViewImage).Y / Scale* Size);
+            Crystal.SetState(column,row, PixelState.On);
+            _imageSource.SetPixel(column, row, _white);
         }
         
         private void CrystalViewImage_OnMouseWheel(object sender, MouseWheelEventArgs e)
@@ -150,37 +139,14 @@ namespace CellularAutomata
             if(Scale == Size && e.Delta < 0)
                 return;
 
-            double gain = e.Delta > 0 ? 2 : Math.Pow(2, -1);
-            Scale = (int)((double)Scale * gain);
-
-            /*System.Windows.Media.Matrix m = CrystalViewImage.RenderTransform.Value;
-            double scaleOdd;
-            if (e.Delta > 0)
-            {
-                scaleOdd = 1.5;
-            }
-            else
-            {
-                var scaleTmp = Scale * 1.0 / 1.5;
-                scaleOdd = scaleTmp < Size ? Scale / Size : 1.0 / 1.5;
-            }
-
-            m.ScaleAt(
-                scaleOdd,
-                scaleOdd,
-                e.GetPosition(CrystalViewImage).X,
-                e.GetPosition(CrystalViewImage).Y);
-
-            Scale *= scaleOdd;
-
-            CrystalViewImage.RenderTransform = new MatrixTransform(m);*/
+            var gain = e.Delta > 0 ? 2 : Math.Pow(2, -1);
+            Scale = (int)(Scale * gain);
         }
 
         #region NotifyPropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -198,6 +164,11 @@ namespace CellularAutomata
         #region AutoUpdate
         private void AutoUpdateButton_OnClick(object sender, RoutedEventArgs e)
         {
+           ToggleAutoUpdate();
+        }
+
+        private void ToggleAutoUpdate()
+        {
             IsAutoUpdateEnabled = !_isAutoUpdateEnabled;
             if (IsAutoUpdateEnabled)
             {
@@ -210,22 +181,17 @@ namespace CellularAutomata
                 _timer.Stop();
             }
         }
-
         public void AutoUpdate()
         {
-            if (MatrixCreated)
-            {
-                if (IsAutoUpdateEnabled)
-                {
-                    _timer.Stop();
-                    MakeStep();
-                    _timer.Start();
-                    
-                }
-                //Thread.Sleep(AutoUpdateDelay);
-            }
+            if (!MatrixCreated) 
+                return;
+            if (!IsAutoUpdateEnabled) 
+                return;
+
+            _timer.Stop();
+            MakeStep();
+            _timer.Start();
         }
-        //private System.Timers.Timer _timer ;//= new Timer(state => { MakeStep(); });
         private readonly Timer _timer;
 
         #endregion
