@@ -26,14 +26,13 @@ namespace CellularAutomata
         private WriteableBitmap _imageSource;
         private int _scale;
         private bool _isAutoUpdateEnabled;
-        private int _autoUpdateDelay = 1000;
 
         public MainWindow()
         {
             InitializeComponent();
             RenderOptions.SetBitmapScalingMode(CrystalViewImage, BitmapScalingMode.NearestNeighbor);
             RenderOptions.SetEdgeMode(CrystalViewImage, EdgeMode.Aliased);
-           _timer = new Timer();
+           _timer.Elapsed += AutoUpdate;
         }
 
         private int Size => (int) MatrixSizeSlider.Value;
@@ -73,11 +72,9 @@ namespace CellularAutomata
 
         public int AutoUpdateDelay
         {
-            get => _autoUpdateDelay;
+            get => (int)_timer.Interval;
             set
             {
-
-                _autoUpdateDelay = value;
                 _timer.Interval = value;
                 OnPropertyChanged();
             }
@@ -172,8 +169,6 @@ namespace CellularAutomata
             IsAutoUpdateEnabled = !_isAutoUpdateEnabled;
             if (IsAutoUpdateEnabled)
             {
-                _timer.Interval = AutoUpdateDelay;
-                _timer.Elapsed += (o, args) => AutoUpdate();
                 _timer.Start();
             }
             else
@@ -181,7 +176,8 @@ namespace CellularAutomata
                 _timer.Stop();
             }
         }
-        public void AutoUpdate()
+        
+        public void AutoUpdate(object sender, ElapsedEventArgs e)
         {
             if (!MatrixCreated) 
                 return;
@@ -192,9 +188,15 @@ namespace CellularAutomata
             MakeStep();
             _timer.Start();
         }
-        private readonly Timer _timer;
+
+        private readonly Timer _timer = new Timer() {Interval = 1000};
 
         #endregion
 
+        private void MainWindow_OnClosed(object? sender, EventArgs e)
+        {
+            _timer.Stop();
+            _timer.Elapsed -= AutoUpdate;
+        }
     }
 }
