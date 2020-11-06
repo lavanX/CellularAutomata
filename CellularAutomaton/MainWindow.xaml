@@ -28,7 +28,7 @@
             <Label Content="Размер матрицы"/>
 
             <TextBox Text="{Binding ElementName=MatrixSizeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="80" VerticalAlignment="Center" IsEnabled="{Binding Path=MatrixCreated,Converter={StaticResource InverseBooleanConverter}}" Margin="5 0"/>
-            <Slider x:Name="MatrixSizeSlider" Width="180" Maximum="500" Minimum="50"  TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center" IsEnabled="{Binding Path=MatrixCreated,Converter={StaticResource InverseBooleanConverter}}" Margin="5 0"/>
+            <Slider x:Name="MatrixSizeSlider" Width="180" Maximum="500" Minimum="200"  TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center" IsEnabled="{Binding Path=MatrixCreated,Converter={StaticResource InverseBooleanConverter}}" Margin="5 0"/>
             <Button x:Name="CreateMatrixButton" Content="Создать матрицу" Click="CreateMatrixButton_OnClick" VerticalAlignment="Center" IsEnabled="{Binding Path=MatrixCreated,Converter={StaticResource InverseBooleanConverter}}" Margin="5 0"/>
             <Button x:Name="ClearButton" Content="Очистить" Click="ClearButton_OnClick" VerticalAlignment="Center" Margin="5 0" IsEnabled="{Binding MatrixCreated}"/>
         </StackPanel>
